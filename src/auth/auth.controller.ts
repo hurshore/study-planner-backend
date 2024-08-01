@@ -7,7 +7,13 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
-import { SendOtpDto, SigninDto, SignupDto, VerifyEmailDto } from './dto';
+import {
+  ResetPasswordDto,
+  SendOtpDto,
+  SigninDto,
+  SignupDto,
+  VerifyEmailDto,
+} from './dto';
 
 @ApiTags('Authentication')
 @Controller('auth')
@@ -47,5 +53,14 @@ export class AuthController {
   @Post('verify-email')
   verifyEmail(@Body() dto: VerifyEmailDto) {
     return this.authService.verifyEmail(dto);
+  }
+
+  @ApiOperation({ summary: 'Reset password' })
+  @ApiOkResponse({ description: 'Password successfully reset' })
+  @ApiBadRequestResponse({ description: 'Bad request.' })
+  @HttpCode(HttpStatus.OK)
+  @Post('reset-password')
+  resetPassword(@Body() dto: ResetPasswordDto) {
+    return this.authService.resetPassword(dto);
   }
 }

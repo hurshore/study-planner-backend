@@ -5,7 +5,13 @@ import { Prisma, User } from '@prisma/client';
 import * as argon from 'argon2';
 import { OtpService } from 'src/otp/otp.service';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { SendOtpDto, SigninDto, SignupDto, VerifyEmailDto } from './dto';
+import {
+  ResetPasswordDto,
+  SendOtpDto,
+  SigninDto,
+  SignupDto,
+  VerifyEmailDto,
+} from './dto';
 import { ResponseMessage } from './auth.constants';
 
 @Injectable()
@@ -61,21 +67,6 @@ export class AuthService {
     return this.otpService.sendOtp(dto.email);
   }
 
-  private async signToken(
-    userId: number,
-    email: string,
-  ): Promise<{ access_token: string }> {
-    const payload = { sub: userId, email };
-    const secret = this.config.get('JWT_SECRET');
-
-    const token = await this.jwt.signAsync(payload, {
-      expiresIn: '7d',
-      secret: secret,
-    });
-
-    return { access_token: token };
-  }
-
   async verifyEmail(dto: VerifyEmailDto) {
     const { user } = await this.verifyUserExists(dto.email);
     if (user.emailVerified) {
@@ -90,6 +81,34 @@ export class AuthService {
       where: { email: dto.email },
       data: { emailVerified: true },
     });
+  }
+
+  async resetPassword(dto: ResetPasswordDto) {
+    await this.verifyUserExists(dto.email);
+    const isValid = await this.otpService.verifyOtp(dto.email, dto.otp);
+    if (!isValid) throw new BadRequestException('Invalid OTP');
+
+    const password = await argon.hash(dto.password);
+    await this.prisma.user.update({
+      where: { email: dto.email },
+      data: { password },
+    });
+    return { data: null, message: 'password reset successful' };
+  }
+
+  private async signToken(
+    userId: number,
+    email: string,
+  ): Promise<{ access_token: string }> {
+    const payload = { sub: userId, email };
+    const secret = this.config.get('JWT_SECRET');
+
+    const token = await this.jwt.signAsync(payload, {
+      expiresIn: '7d',
+      secret: secret,
+    });
+
+    return { access_token: token };
   }
 
   private async returnUser(user: User) {

@@ -1,12 +1,13 @@
-import { Body, Controller, Post } from '@nestjs/common';
+import { Body, Controller, HttpCode, HttpStatus, Post } from '@nestjs/common';
 import {
   ApiBadRequestResponse,
   ApiCreatedResponse,
+  ApiOkResponse,
   ApiOperation,
   ApiTags,
 } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
-import { SignupDto } from './dto';
+import { SendOtpDto, SigninDto, SignupDto, VerifyEmailDto } from './dto';
 
 @ApiTags('Authentication')
 @Controller('auth')
@@ -19,5 +20,32 @@ export class AuthController {
   @Post('signup')
   signup(@Body() dto: SignupDto) {
     return this.authService.signup(dto);
+  }
+
+  @ApiOperation({ summary: 'Sign in user' })
+  @ApiOkResponse({ description: 'User successfully signed in' })
+  @ApiBadRequestResponse({ description: 'Bad request.' })
+  @HttpCode(HttpStatus.OK)
+  @Post('signin')
+  signin(@Body() dto: SigninDto) {
+    return this.authService.signin(dto);
+  }
+
+  @ApiOperation({ summary: 'Send OTP' })
+  @ApiOkResponse({ description: 'OTP sent successfully' })
+  @ApiBadRequestResponse({ description: 'Bad request.' })
+  @HttpCode(HttpStatus.OK)
+  @Post('send-otp')
+  sendOtp(@Body() dto: SendOtpDto) {
+    return this.authService.sendOtp(dto);
+  }
+
+  @ApiOperation({ summary: 'Verify email' })
+  @ApiOkResponse({ description: 'Email successfully verified' })
+  @ApiBadRequestResponse({ description: 'Bad request.' })
+  @HttpCode(HttpStatus.OK)
+  @Post('verify-email')
+  verifyEmail(@Body() dto: VerifyEmailDto) {
+    return this.authService.verifyEmail(dto);
   }
 }

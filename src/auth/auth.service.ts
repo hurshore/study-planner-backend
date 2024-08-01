@@ -1,12 +1,11 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
-import { Prisma } from '@prisma/client';
+import { Prisma, User } from '@prisma/client';
 import * as argon from 'argon2';
 import { OtpService } from 'src/otp/otp.service';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { SignupDto } from './dto';
-import { SendOtpDto } from './dto/send-otp.dto';
+import { SendOtpDto, SigninDto, SignupDto, VerifyEmailDto } from './dto';
 import { ResponseMessage } from './auth.constants';
 
 @Injectable()
@@ -40,7 +39,78 @@ export class AuthService {
     }
   }
 
-  private async sendOtp(dto: SendOtpDto) {
+  async signin(dto: SigninDto) {
+    const { user } = await this.verifyUserExists(dto.email);
+
+    // compare password
+    const pwMatches = await argon.verify(user.password, dto.password);
+
+    // if password incorrect throw exception
+    if (!pwMatches) {
+      throw new BadRequestException(ResponseMessage.INCORRECT_CREDENTIALS);
+    }
+    if (!user.emailVerified) {
+      throw new BadRequestException(ResponseMessage.EMAIL_UNVERIFIED);
+    }
+
+    const data = await this.returnUser(user);
+    return { data, message: ResponseMessage.SIGNIN_SUCCESS };
+  }
+
+  async sendOtp(dto: SendOtpDto) {
     return this.otpService.sendOtp(dto.email);
+  }
+
+  private async signToken(
+    userId: number,
+    email: string,
+  ): Promise<{ access_token: string }> {
+    const payload = { sub: userId, email };
+    const secret = this.config.get('JWT_SECRET');
+
+    const token = await this.jwt.signAsync(payload, {
+      expiresIn: '7d',
+      secret: secret,
+    });
+
+    return { access_token: token };
+  }
+
+  async verifyEmail(dto: VerifyEmailDto) {
+    const { user } = await this.verifyUserExists(dto.email);
+    if (user.emailVerified) {
+      throw new BadRequestException(ResponseMessage.EMAIL_ALREADY_VERIFIED);
+    }
+
+    const isValid = await this.otpService.verifyOtp(dto.email, dto.otp);
+    if (!isValid) {
+      throw new BadRequestException(ResponseMessage.INVALID_OTP);
+    }
+    await this.prisma.user.update({
+      where: { email: dto.email },
+      data: { emailVerified: true },
+    });
+  }
+
+  private async returnUser(user: User) {
+    delete user.password;
+    delete user.emailVerified;
+    const token = (await this.signToken(user.id, user.email)).access_token;
+    return { ...user, token };
+  }
+
+  private async userExists(email: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { email },
+    });
+    return { exists: !!user, user };
+  }
+
+  private async verifyUserExists(email: string) {
+    const data = await this.userExists(email);
+    if (!data.exists) {
+      throw new BadRequestException(ResponseMessage.USER_NOT_FOUND);
+    }
+    return data;
   }
 }

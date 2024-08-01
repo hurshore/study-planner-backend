@@ -8,13 +8,15 @@ import { OtpModule } from './otp/otp.module';
 import { RedisModule } from './redis/redis.module';
 import { EmailModule } from './email/email.module';
 import { PrismaModule } from './prisma/prisma.module';
+import { FileUploadModule } from './file-upload/file-upload.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
     CacheModule.register({
       store: redisStore,
-      url: process.env.REDIS_URL,
+      host: 'localhost',
+      port: 6379,
       isGlobal: true,
     }),
     AuthModule,
@@ -22,6 +24,7 @@ import { PrismaModule } from './prisma/prisma.module';
     RedisModule,
     EmailModule,
     PrismaModule,
+    FileUploadModule,
   ],
   providers: [],
 })

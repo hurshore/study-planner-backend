@@ -20,8 +20,6 @@ export class OtpService {
       const otp = this.generateOtp().toString();
       await this.redisService.set(email, otp, duration);
 
-      console.log(email, otp);
-
       // send email;
       await this.emailService.sendEmail({
         to: email,
@@ -31,7 +29,6 @@ export class OtpService {
       });
     } catch (error) {
       console.log(error);
-      throw error;
     }
   }
 

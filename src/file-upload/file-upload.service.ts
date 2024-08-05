@@ -3,12 +3,14 @@ import { promises as fs } from 'fs';
 import * as path from 'path';
 import * as pdf from 'pdf-parse';
 import { ResponseMessage } from './file-upload.constants';
+import { PrismaService } from 'src/prisma/prisma.service';
+import { Response } from 'src/common/transform.interceptor';
 
 @Injectable()
 export class FileUploadService {
   private readonly uploadDir = 'uploads';
 
-  constructor() {
+  constructor(private prisma: PrismaService) {
     this.ensureUploadDirectoryExists();
   }
 
@@ -20,16 +22,31 @@ export class FileUploadService {
     }
   }
 
-  async uploadFile(file: Express.Multer.File): Promise<string> {
+  async uploadFile(
+    file: Express.Multer.File,
+    userId: number,
+  ): Promise<Response<{ courseId: number }>> {
     if (!file) {
       throw new BadRequestException(ResponseMessage.NO_FILE);
     }
 
     const fileName = `${Date.now()}-${file.originalname}`;
     const filePath = path.join(this.uploadDir, fileName);
-
     await fs.writeFile(filePath, file.buffer);
-    return fileName;
+
+    const course = await this.prisma.course.create({
+      data: {
+        title: file.originalname,
+        fileName: fileName,
+        userId,
+      },
+    });
+
+    return {
+      data: { courseId: course.id },
+      message: ResponseMessage.UPLOAD_SUCCESS,
+      success: true,
+    };
   }
 
   async extractTextFromPdf(fileName: string): Promise<string> {

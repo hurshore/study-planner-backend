@@ -22,6 +22,34 @@ model User {
   emailVerified Boolean  @default(false)
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
+  Course        Course[]
 
   @@map("users")
+}
+
+model Course {
+  id        Int        @id @default(autoincrement())
+  title     String
+  fileName  String
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  userId    Int
+  user      User       @relation(fields: [userId], references: [id])
+  Question  Question[]
+
+  @@map("courses")
+}
+
+model Question {
+  id        Int      @id @default(autoincrement())
+  question  String
+  options   String[]
+  answer    Int
+  topic     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  courseId  Int
+  course    Course   @relation(fields: [courseId], references: [id])
+
+  @@map("questions")
 }

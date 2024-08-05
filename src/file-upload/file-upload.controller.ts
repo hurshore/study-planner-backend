@@ -19,6 +19,7 @@ import {
 } from '@nestjs/swagger';
 import { JwtGuard } from 'src/auth/guard';
 import { ResponseMessage } from './file-upload.constants';
+import { GetUser } from 'src/auth/decorator';
 
 @ApiTags('File Upload')
 @ApiBearerAuth()
@@ -61,15 +62,14 @@ export class FileUploadController {
   })
   @Post('pdf')
   @UseInterceptors(FileInterceptor('file'))
-  async uploadPdf(@UploadedFile() file: Express.Multer.File) {
+  async uploadPdf(
+    @GetUser('id') userId: number,
+    @UploadedFile() file: Express.Multer.File,
+  ) {
     if (!file) {
       throw new BadRequestException(ResponseMessage.NO_FILE);
     }
 
-    const fileName = await this.fileUploadService.uploadFile(file);
-    const extractedText =
-      await this.fileUploadService.extractTextFromPdf(fileName);
-
-    return { fileName, extractedText };
+    return this.fileUploadService.uploadFile(file, userId);
   }
 }

@@ -9,6 +9,7 @@ import { RedisModule } from './redis/redis.module';
 import { EmailModule } from './email/email.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { FileUploadModule } from './file-upload/file-upload.module';
+import { QuestionGenerationModule } from './question-generation/question-generation.module';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { FileUploadModule } from './file-upload/file-upload.module';
     EmailModule,
     PrismaModule,
     FileUploadModule,
+    QuestionGenerationModule,
   ],
   providers: [],
 })

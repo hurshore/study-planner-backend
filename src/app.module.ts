@@ -10,6 +10,7 @@ import { EmailModule } from './email/email.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { FileUploadModule } from './file-upload/file-upload.module';
 import { QuestionGenerationModule } from './question-generation/question-generation.module';
+import { AssessmentModule } from './assessment/assessment.module';
 
 @Module({
   imports: [
@@ -27,6 +28,7 @@ import { QuestionGenerationModule } from './question-generation/question-generat
     PrismaModule,
     FileUploadModule,
     QuestionGenerationModule,
+    AssessmentModule,
   ],
   providers: [],
 })

@@ -14,28 +14,30 @@ datasource db {
 }
 
 model User {
-  id            Int      @id @default(autoincrement())
+  id            Int          @id @default(autoincrement())
   firstname     String
   lastname      String
-  email         String   @unique
+  email         String       @unique
   password      String
-  emailVerified Boolean  @default(false)
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  emailVerified Boolean      @default(false)
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
   Course        Course[]
+  Assessment    Assessment[]
 
   @@map("users")
 }
 
 model Course {
-  id        Int        @id @default(autoincrement())
-  title     String
-  fileName  String
-  createdAt DateTime   @default(now())
-  updatedAt DateTime   @updatedAt
-  userId    Int
-  user      User       @relation(fields: [userId], references: [id])
-  Question  Question[]
+  id         Int          @id @default(autoincrement())
+  title      String
+  fileName   String
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
+  userId     Int
+  user       User         @relation(fields: [userId], references: [id])
+  Question   Question[]
+  Assessment Assessment[]
 
   @@map("courses")
 }
@@ -50,6 +52,36 @@ model Question {
   updatedAt DateTime @updatedAt
   courseId  Int
   course    Course   @relation(fields: [courseId], references: [id])
+  Answer    Answer[]
 
   @@map("questions")
+}
+
+model Assessment {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id])
+  courseId  Int
+  course    Course   @relation(fields: [courseId], references: [id])
+  score     Float
+  total     Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  answers   Answer[]
+
+  @@map("assessments")
+}
+
+model Answer {
+  id           Int        @id @default(autoincrement())
+  assessmentId Int
+  assessment   Assessment @relation(fields: [assessmentId], references: [id])
+  questionId   Int
+  question     Question   @relation(fields: [questionId], references: [id])
+  chosenAnswer Int
+  isCorrect    Boolean
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  @@map("answers")
 }

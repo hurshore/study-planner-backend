@@ -28,7 +28,7 @@ export class OtpService {
         context: { otp },
       });
     } catch (error) {
-      console.log(error);
+      console.error(error);
     }
   }
 

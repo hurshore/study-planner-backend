@@ -11,6 +11,7 @@ import { PrismaModule } from './prisma/prisma.module';
 import { FileUploadModule } from './file-upload/file-upload.module';
 import { QuestionGenerationModule } from './question-generation/question-generation.module';
 import { AssessmentModule } from './assessment/assessment.module';
+import { AIModule } from './ai/ai.module';
 
 @Module({
   imports: [
@@ -29,6 +30,7 @@ import { AssessmentModule } from './assessment/assessment.module';
     FileUploadModule,
     QuestionGenerationModule,
     AssessmentModule,
+    AIModule,
   ],
   providers: [],
 })

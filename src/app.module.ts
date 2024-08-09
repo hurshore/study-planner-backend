@@ -9,7 +9,7 @@ import { RedisModule } from './redis/redis.module';
 import { EmailModule } from './email/email.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { FileUploadModule } from './file-upload/file-upload.module';
-import { QuestionGenerationModule } from './question-generation/question-generation.module';
+import { QuestionModule } from './question/question.module';
 import { AssessmentModule } from './assessment/assessment.module';
 import { AIModule } from './ai/ai.module';
 
@@ -28,7 +28,7 @@ import { AIModule } from './ai/ai.module';
     EmailModule,
     PrismaModule,
     FileUploadModule,
-    QuestionGenerationModule,
+    QuestionModule,
     AssessmentModule,
     AIModule,
   ],

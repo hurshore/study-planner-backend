@@ -6,7 +6,7 @@ import {
 import { GenerateQuestionsDto } from './dto/generate-questions.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { FileUploadService } from 'src/file-upload/file-upload.service';
-import { ResponseMessage } from './question-generation.constants';
+import { ResponseMessage } from './question.constants';
 import { AIService } from 'src/ai/ai.service';
 
 type GeneratedQuestion = {
@@ -21,12 +21,26 @@ type Topic = {
 };
 
 @Injectable()
-export class QuestionGenerationService {
+export class QuestionService {
   constructor(
     private prisma: PrismaService,
     private fileUploadService: FileUploadService,
     private aiService: AIService,
   ) {}
+
+  async getQuestions(courseId: number, userId: number) {
+    const course = await this.prisma.course.findFirst({
+      where: { id: courseId, userId: userId },
+    });
+
+    if (!course) {
+      throw new NotFoundException(ResponseMessage.NO_COURSE);
+    }
+
+    return this.prisma.question.findMany({
+      where: { courseId: course.id },
+    });
+  }
 
   async generateQuestions(
     dto: GenerateQuestionsDto,
@@ -38,6 +52,16 @@ export class QuestionGenerationService {
 
     if (!course) {
       throw new NotFoundException(ResponseMessage.NO_COURSE);
+    }
+
+    const existingQuestions = await this.prisma.question.findMany({
+      where: { courseId: course.id },
+    });
+
+    if (existingQuestions.length > 0) {
+      throw new BadRequestException(
+        ResponseMessage.QUESTIONS_ALREADY_GENERATED,
+      );
     }
 
     const courseContent = await this.fileUploadService.extractTextFromPdf(

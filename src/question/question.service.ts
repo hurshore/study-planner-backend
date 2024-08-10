@@ -125,6 +125,8 @@ export class QuestionService {
         where: { courseId: course.id },
       });
 
+      this.assignDifficulty(course.id); // TODO: implement retry mechanism
+
       return insertedQuestions;
     } catch (error) {
       console.error(ResponseMessage.GENERATION_FAILED, error);
@@ -212,6 +214,122 @@ export class QuestionService {
     } catch (error) {
       console.error(ResponseMessage.TOPIC_GENERATION_FAILED);
       throw new BadRequestException(ResponseMessage.TOPIC_GENERATION_FAILED);
+    }
+  }
+
+  async assignDifficulty(courseId: number) {
+    const questions = await this.prisma.question.findMany({
+      where: { courseId },
+    });
+
+    if (questions.length === 0) {
+      throw new NotFoundException(ResponseMessage.NO_QUESTIONS);
+    }
+
+    const questionList = questions.map((q) => ({
+      question: q.question,
+      options: q.options,
+      answer: q.answer,
+      topic: q.topic,
+    }));
+
+    const prompt = `You will be given a list of questions. Your task is to assign a difficulty level to each question on a scale of 1 to 5, where 1 is the easiest and 5 is the most difficult. Here's how to approach this task:
+
+      1. First, you will receive a list of questions:
+      <questions>
+      ${JSON.stringify(questionList)}
+      </questions>
+      
+      2. Read through all the questions carefully to get an understanding of the range of complexity and depth of knowledge required.
+      
+      3. For each question, follow these steps:
+        a. Analyze the question's content, structure, and required knowledge.
+        b. Consider the following factors when assigning a difficulty level:
+            - Complexity of the concept being asked about
+            - Amount of prior knowledge required
+            - Number of steps or pieces of information needed to answer
+            - Level of critical thinking or analysis required
+            - Specificity or technicality of the subject matter
+      
+      4. Use the following guidelines for assigning difficulty levels:
+        - Level 1: Basic recall of simple facts or concepts. Straightforward questions with obvious answers.
+        - Level 2: Understanding of fundamental concepts. May require simple application of knowledge.
+        - Level 3: Application of knowledge to new situations. May involve comparing or contrasting ideas.
+        - Level 4: Analysis and synthesis of information. Requires deeper understanding and critical thinking.
+        - Level 5: Complex problem-solving, evaluation of multiple factors, or highly specialized knowledge.
+      
+      5. Your output should be in the following format:
+        <difficulty_levels>
+        [Question 1 (exact text as given)]: [Difficulty Level]
+        [Question 2 (exact text as given)]: [Difficulty Level]
+        ...
+        </difficulty_levels>
+      
+      6. Here's an example of how your output might look:
+        <example>
+        <difficulty_levels>
+        What is the capital of France?: 1
+        Explain the process of photosynthesis in plants: 3
+        Analyze the impacts of the Industrial Revolution on modern society: 4
+        Describe the fundamental principles of quantum mechanics: 5
+        </difficulty_levels>
+        </example>
+      
+      7. Consider the target audience or educational level when assigning difficulty. A question that might be level 3 for a high school student could be level 1 for a university student in that field.
+      
+      8. Be consistent in your difficulty assignments. Questions of similar complexity should receive the same difficulty level.
+      
+      9. After processing all questions, provide your final output with all questions and their assigned difficulty levels. Ensure each question has exactly one difficulty level assigned.
+      
+      Begin your analysis now and present your final output of questions with their assigned difficulty levels.
+    `;
+
+    try {
+      const content = await this.aiService.getChatCompletion(prompt, 2048);
+      const regex = /<difficulty_levels>\s*([\s\S]*?)\s*<\/difficulty_levels>/g;
+
+      const difficultyLevels = [...content.matchAll(regex)].map((match) => {
+        const [, content] = match;
+        return content
+          .split('\n')
+          .filter((line) => line.trim())
+          .map((line) => {
+            const [question, level] = line.split(':').map((s) => s.trim());
+            return { question, level: parseInt(level) };
+          });
+      });
+
+      const questionMap = questions.reduce((map, q) => {
+        map[q.question] = q.id;
+        return map;
+      }, {});
+
+      const difficultyLevelsMap = difficultyLevels.reduce((map, levels) => {
+        levels.forEach((level) => {
+          const questionId = questionMap[level.question];
+          map[questionId] = level.level;
+        });
+        return map;
+      }, {});
+
+      const updatePromises = Object.entries(difficultyLevelsMap).map(
+        ([id, difficultyLevel]) =>
+          this.prisma.question.updateMany({
+            where: {
+              id: parseInt(id),
+            },
+            data: {
+              difficultyLevel,
+            },
+          }),
+      );
+
+      await Promise.all(updatePromises);
+    } catch (error) {
+      console.error(ResponseMessage.DIFFICULTY_ASSIGNMENT_FAILED, error);
+      throw new BadRequestException(
+        ResponseMessage.DIFFICULTY_ASSIGNMENT_FAILED,
+      );
     }
   }
 

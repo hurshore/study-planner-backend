@@ -59,16 +59,19 @@ model Question {
 }
 
 model Assessment {
-  id        Int      @id @default(autoincrement())
-  userId    Int
-  user      User     @relation(fields: [userId], references: [id])
-  courseId  Int
-  course    Course   @relation(fields: [courseId], references: [id])
-  score     Float
-  total     Int
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  answers   Answer[]
+  id          Int      @id @default(autoincrement())
+  userId      Int
+  user        User     @relation(fields: [userId], references: [id])
+  courseId    Int
+  course      Course   @relation(fields: [courseId], references: [id])
+  score       Float
+  total       Int
+  strengths   String[]
+  weaknesses  String[]
+  suggestions String[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  answers     Answer[]
 
   @@map("assessments")
 }

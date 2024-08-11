@@ -130,7 +130,32 @@ export class AssessmentController {
         userId,
       );
     } catch (error) {
-      console.log(error);
+      console.error(error);
+      if (error instanceof BadRequestException) {
+        throw error;
+      }
+      throw new BadRequestException(ResponseMessage.RETRIEVAL_FAILED);
+    }
+  }
+
+  @ApiOperation({ summary: 'Generate suggestions' })
+  @ApiParam({ name: 'id', type: 'number', description: 'Assessment ID' })
+  @ApiOkResponse({ description: 'Suggestions generated successfully' })
+  @ApiBadRequestResponse({
+    description: 'Assessment not found or assessment already generated',
+  })
+  @Post(':id/suggestions')
+  async generateSuggestions(
+    @Param('id', ParseIntPipe) assessmentId: number,
+    @GetUser('id') userId: number,
+  ) {
+    try {
+      return await this.assessmentService.generateSuggestions(
+        assessmentId,
+        userId,
+      );
+    } catch (error) {
+      console.error(error);
       if (error instanceof BadRequestException) {
         throw error;
       }

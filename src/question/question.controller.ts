@@ -20,7 +20,7 @@ import { GenerateQuestionsDto } from './dto/generate-questions.dto';
 import { JwtGuard } from 'src/auth/guard';
 import { GetUser } from 'src/auth/decorator';
 
-@ApiTags('Question Generation')
+@ApiTags('Question')
 @ApiBearerAuth()
 @UseGuards(JwtGuard)
 @Controller('question')

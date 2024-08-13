@@ -59,9 +59,7 @@ export class QuestionService {
     });
 
     if (existingQuestions.length > 0) {
-      throw new BadRequestException(
-        ResponseMessage.QUESTIONS_ALREADY_GENERATED,
-      );
+      return existingQuestions;
     }
 
     const courseContent = await this.fileUploadService.extractTextFromPdf(
@@ -79,6 +77,7 @@ export class QuestionService {
         a. Formulate a clear and concise question stem.
         b. Create one correct answer and three plausible distractors.
         c. Ensure that the distractors are high-quality and not easily distinguishable from the correct answer.
+        d. Avoid making the correct answer always the first option; randomize the order of options.
       4. Format your output as a JSON array of objects, where each object represents a question and has the following structure:
         {
           "question": "Question stem goes here",
@@ -99,7 +98,7 @@ export class QuestionService {
     `;
 
     try {
-      const content = await this.aiService.getChatCompletion(prompt, 2048);
+      const content = await this.aiService.getChatCompletion(prompt, 2048); // TODO: implement retry mechanism
       const jsonMatch = content.match(/<json_output>([\s\S]*)<\/json_output>/);
 
       if (!jsonMatch) {
@@ -196,7 +195,7 @@ export class QuestionService {
     `;
 
     try {
-      const content = await this.aiService.getChatCompletion(prompt, 2048);
+      const content = await this.aiService.getChatCompletion(prompt, 2048); // TODO: implement retry mechanism
       const regex = /<topic>\s*([\s\S]*?)\s*<\/topic>/g;
 
       const topics = [...content.matchAll(regex)].map((match) => {
@@ -285,7 +284,7 @@ export class QuestionService {
     `;
 
     try {
-      const content = await this.aiService.getChatCompletion(prompt, 2048);
+      const content = await this.aiService.getChatCompletion(prompt, 2048); // TODO: implement retry mechanism
       const regex = /<difficulty_levels>\s*([\s\S]*?)\s*<\/difficulty_levels>/g;
 
       const difficultyLevels = [...content.matchAll(regex)].map((match) => {

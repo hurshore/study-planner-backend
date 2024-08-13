@@ -58,7 +58,7 @@ export class AssessmentService {
 
       const assessment = await prisma.assessment.create({
         data: {
-          userId: userId,
+          userId,
           courseId: dto.courseId,
           score: correctAnswers,
           total: course.Question.length,
@@ -140,9 +140,11 @@ export class AssessmentService {
       assessment.strengths.length > 0 &&
       assessment.weaknesses.length > 0
     ) {
-      throw new BadRequestException(
-        ResponseMessage.SUGGESTIONS_ALREADY_GENERATED,
-      );
+      const suggestions = this.extractSuggestions(assessment.suggestions);
+      return {
+        data: { ...assessment, suggestions },
+        message: ResponseMessage.SUGGESTIONS_ALREADY_GENERATED,
+      }; // TODO: determine whether to return the data or throw an error
     }
 
     const questions = assessment.course.Question.map((q) => q.question);
@@ -220,46 +222,60 @@ export class AssessmentService {
       </suggestions>
       </analysis>
       Ensure that your analysis is constructive and encouraging. Focus on providing actionable advice that can help the student improve their performance in future assessments.
+      Do not include "**" or any other syntax for bolding, italicizing, or emphasizing text in your response. The response should be plain text.
     `;
 
     const response = await this.aiService.getChatCompletion(prompt);
 
-    const extractTitles = (text: string): string[] =>
-      text
-        .trim()
-        .split('\n')
-        .map((item) => item.match(/-\s\*\*(.*?)\*\*/)?.[1]?.replace(/:$/, ''))
-        .filter(Boolean);
-
-    let remainingText = response;
+    // define regex patterns
+    const strengthsRegex = /^\s*-\s*(.*?):/gm;
+    const weaknessesRegex = /^\s*-\s*(.*?):/gm;
 
     // extract strengths
-    const strengthsRegex =
-      /<strengths>\s*((?:(?!<\/strengths>)[\s\S])*)\s*<\/strengths>/;
-    const strengthsMatch = remainingText.match(strengthsRegex);
-    const strengths = strengthsMatch ? extractTitles(strengthsMatch[1]) : [];
-    remainingText = remainingText.replace(strengthsRegex, '');
+    const strengths =
+      response
+        .match(/<strengths>([\s\S]*?)<\/strengths>/)?.[1]
+        .match(strengthsRegex)
+        ?.map((match) => match.trim().replace(/^-\s*/, '').replace(/:$/, '')) ||
+      [];
 
     // extract weaknesses
-    const weaknessesRegex =
-      /<weaknesses>\s*((?:(?!<\/weaknesses>)[\s\S])*)\s*<\/weaknesses>/;
-    const weaknessesMatch = remainingText.match(weaknessesRegex);
-    const weaknesses = weaknessesMatch ? extractTitles(weaknessesMatch[1]) : [];
-    remainingText = remainingText.replace(weaknessesRegex, '');
+    const weaknesses =
+      response
+        .match(/<weaknesses>([\s\S]*?)<\/weaknesses>/)?.[1]
+        .match(weaknessesRegex)
+        ?.map((match) => match.trim().replace(/^-\s*/, '').replace(/:$/, '')) ||
+      [];
 
-    // extract suggestions
-    const suggestionsRegex =
-      /<suggestion>\s*<title>((?:(?!<\/title>).*?))<\/title>[\s\S]*?<\/suggestion>/g;
-    const suggestionsMatch: string[] = [];
-    let match: RegExpExecArray | null;
+    const content = response;
 
-    while ((match = suggestionsRegex.exec(remainingText)) !== null) {
-      suggestionsMatch.push(match[1]);
-    }
+    const regex = /<suggestions>([\s\S]*?)<\/suggestions>/;
+    const match = content.match(regex);
 
-    return this.prisma.assessment.update({
+    const suggestions = match[1];
+    const result = this.extractSuggestions(suggestions);
+
+    const updatedAssessment = await this.prisma.assessment.update({
       where: { id: assessmentId },
-      data: { strengths, weaknesses, suggestions: suggestionsMatch },
+      data: { strengths, weaknesses, suggestions },
     });
+
+    return { ...updatedAssessment, suggestions: result };
+  }
+
+  private extractSuggestions(input: string) {
+    const regex =
+      /<suggestion>\s*<title>(.*?)<\/title>\s*<tips>([\s\S]*?)<\/tips>\s*<\/suggestion>/g;
+
+    const result = Array.from(input.matchAll(regex)).map((match) => ({
+      title: match[1],
+      tips: match[2]
+        .trim()
+        .split('-')
+        .slice(1)
+        .map((tip) => tip.trim()),
+    }));
+
+    return result;
   }
 }

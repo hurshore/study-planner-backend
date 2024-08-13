@@ -60,7 +60,7 @@ export class FileUploadController {
   @ApiBadRequestResponse({
     description: 'No file uploaded or invalid file format',
   })
-  @Post('pdf')
+  @Post('')
   @UseInterceptors(FileInterceptor('file'))
   async uploadPdf(
     @GetUser('id') userId: number,

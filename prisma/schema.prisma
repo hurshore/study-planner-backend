@@ -24,6 +24,7 @@ model User {
   updatedAt     DateTime     @updatedAt
   Course        Course[]
   Assessment    Assessment[]
+  Plan          Plan[]
 
   @@map("users")
 }
@@ -66,9 +67,9 @@ model Assessment {
   course      Course   @relation(fields: [courseId], references: [id])
   score       Float
   total       Int
-  strengths   String[]
-  weaknesses  String[]
-  suggestions String[]
+  strengths   String[] @default([])
+  weaknesses  String[] @default([])
+  suggestions String   @default("")
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   answers     Answer[]
@@ -88,4 +89,20 @@ model Answer {
   updatedAt    DateTime   @updatedAt
 
   @@map("answers")
+}
+
+model Plan {
+  id           Int      @id @default(autoincrement())
+  userId       Int
+  startDate    DateTime
+  endDate      DateTime
+  goals        String[]
+  assessmentId Int
+  weeklyHours  Int
+  plan         String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  user         User     @relation(fields: [userId], references: [id])
+
+  @@map("plans")
 }

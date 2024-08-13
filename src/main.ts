@@ -13,9 +13,10 @@ async function bootstrap() {
   app.use(json());
   app.useGlobalInterceptors(new TransformInterceptor());
   app.useGlobalFilters(new HttpExceptionFilter());
+  app.enableCors();
   const config = new DocumentBuilder()
-    .setTitle('Rexofarm')
-    .setDescription('Rexofarm API documentation')
+    .setTitle('Study Planner')
+    .setDescription('Study Planner API documentation')
     .setVersion('1.0')
     .addBearerAuth()
     .build();

@@ -144,7 +144,7 @@ export class AssessmentController {
   @ApiBadRequestResponse({
     description: 'Assessment not found or assessment already generated',
   })
-  @Post(':id/suggestions')
+  @Get(':id/suggestions')
   async generateSuggestions(
     @Param('id', ParseIntPipe) assessmentId: number,
     @GetUser('id') userId: number,

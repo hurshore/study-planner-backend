@@ -12,6 +12,7 @@ import { FileUploadModule } from './file-upload/file-upload.module';
 import { QuestionModule } from './question/question.module';
 import { AssessmentModule } from './assessment/assessment.module';
 import { AIModule } from './ai/ai.module';
+import { PlannerModule } from './planner/planner.module';
 
 @Module({
   imports: [
@@ -31,6 +32,7 @@ import { AIModule } from './ai/ai.module';
     QuestionModule,
     AssessmentModule,
     AIModule,
+    PlannerModule,
   ],
   providers: [],
 })

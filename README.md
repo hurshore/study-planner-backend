@@ -1,73 +1,87 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="200" alt="Nest Logo" /></a>
-</p>
+# Smart Study Plan System (SSPS) - Backend
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+## Overview
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://coveralls.io/github/nestjs/nest?branch=master" target="_blank"><img src="https://coveralls.io/repos/github/nestjs/nest/badge.svg?branch=master#9" alt="Coverage" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+This repository contains the backend implementation of a Smart Study Plan System (SSPS), developed as a final year project. The system provides personalized academic guidance to students by leveraging artificial intelligence, specifically OpenAI's GPT-4o model.
 
-## Description
+## Features
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+- **PDF Processing Module**: Extracts and processes content from educational materials
+- **Question Generation**: Automatically generates relevant questions using Azure OpenAI's GPT-4o
+- **Student Assessment**: Evaluates student comprehension through adaptive questioning
+- **Study Plan Generation**: Creates personalized study plans based on student performance
+- **Authentication & Authorization**: Secure user management and access control
+- **Email Notifications**: Automated communication system for user engagement
+- **Real-time Caching**: Redis-based caching for improved performance
+
+## Tech Stack
+
+- **Framework**: NestJS
+- **Database**: PostgreSQL with Prisma ORM
+- **Caching**: Redis
+- **AI Integration**: Azure OpenAI API
+- **Authentication**: JWT
+- **Email**: NestJS Mailer
+- **API Documentation**: Swagger/OpenAPI
+
+## Prerequisites
+
+- Node.js (>= 18.x)
+- PostgreSQL
+- Redis
+- Azure OpenAI API access
+
+## Environment Variables
+
+Create a `.env` file in the root directory with the following variables:
+
+```env
+DATABASE_URL=postgresql://[user]:[password]@[host]:[port]/[database]
+REDIS_URL=[your-redis-url]
+EMAIL_HOST=[smtp-host]
+EMAIL_USER=[email-username]
+EMAIL_PASSWORD=[email-password]
+JWT_SECRET=[your-jwt-secret]
+AZURE_OPENAI_KEY=[your-azure-openai-key]
+AZURE_OPENAI_ENDPOINT=[your-azure-openai-endpoint]
+AZURE_OPENAI_DEPLOYMENT_NAME=[your-deployment-name]
+```
 
 ## Installation
 
 ```bash
-$ npm install
+# Install dependencies
+npm install
+
+# Generate Prisma client
+npx prisma generate
+
+# Run database migrations
+npx prisma migrate deploy
 ```
 
-## Running the app
+## Running the Application
 
 ```bash
-# development
-$ npm run start
+# Development mode
+npm run start:dev
 
-# watch mode
-$ npm run start:dev
-
-# production mode
-$ npm run start:prod
+# Production mode
+npm run start:prod
 ```
 
-## Test
+## API Documentation
 
-```bash
-# unit tests
-$ npm run test
+Once the application is running, access the Swagger documentation at:
+`http://localhost:8080/api/v1/api-docs`
 
-# e2e tests
-$ npm run test:e2e
+## System Architecture
 
-# test coverage
-$ npm run test:cov
-```
+The backend is structured into several key modules:
 
-## Support
-
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
-
-## Stay in touch
-
-- Author - [Kamil Myśliwiec](https://kamilmysliwiec.com)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
-
-## License
-
-Nest is [MIT licensed](LICENSE).
+- **Auth Module**: Handles user authentication and authorization
+- **Question Module**: Manages question generation and assessment
+- **Planner Module**: Generates and manages study plans
+- **File Upload Module**: Handles PDF processing and storage
+- **Email Module**: Manages communication with users
+- **AI Module**: Integrates with Azure OpenAI for intelligent features
